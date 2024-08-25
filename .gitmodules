@@ -1,0 +1,60 @@
+[submodule "lame"]
+	path = lame
+	url = git@github.com:rbrito/deprecated-lame-mirror.git
+[submodule "ffmpeg"]
+	path = ffmpeg
+	url = git@github.com:FFmpeg/FFmpeg.git
+[submodule "libpng"]
+	path = libpng
+	url = git@github.com:pnggroup/libpng.git
+[submodule "openjpeg"]
+	path = openjpeg
+	url = git@github.com:uclouvain/openjpeg.git
+[submodule "zimg"]
+	path = zimg
+	url = git@github.com:sekrit-twc/zimg.git
+[submodule "avbuild"]
+	path = avbuild
+	url = git@github.com:wang-bin/avbuild.git
+[submodule "libwebp"]
+	path = libwebp
+	url = git@github.com:webmproject/libwebp.git
+[submodule "SVT-AV1"]
+	path = SVT-AV1
+	url = https://gitlab.com/AOMediaCodec/SVT-AV1.git
+[submodule "vidstab"]
+	path = vidstab
+	url = git@github.com:georgmartius/vid.stab.git
+[submodule "snappy"]
+	path = snappy
+	url = git@github.com:google/snappy.git
+[submodule "libvpx"]
+	path = libvpx
+	url = git@github.com:webmproject/libvpx.git
+[submodule "x264"]
+	path = x264
+	url = https://code.videolan.org/videolan/x264.git
+[submodule "libudfread"]
+	path = libudfread
+	url = https://code.videolan.org/videolan/libudfread.git
+[submodule "x265"]
+	path = x265
+	url = git@bitbucket.org:multicoreware/x265_git.git
+[submodule "libtheora"]
+	path = libtheora
+	url = git@github.com:xiph/theora.git
+[submodule "libogg"]
+	path = libogg
+	url = git@github.com:xiph/ogg.git
+[submodule "libvorbis"]
+	path = libvorbis
+	url = git@github.com:xiph/vorbis.git
+[submodule "opus"]
+	path = opus
+	url = git@github.com:xiph/opus.git
+[submodule "aom"]
+	path = aom
+	url = https://aomedia.googlesource.com/aom
+[submodule "freetype"]
+	path = freetype
+	url = git@github.com:freetype/freetype.git

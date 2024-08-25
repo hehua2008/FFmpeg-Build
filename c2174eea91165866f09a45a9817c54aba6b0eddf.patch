@@ -1,0 +1,33 @@
+From c2174eea91165866f09a45a9817c54aba6b0eddf Mon Sep 17 00:00:00 2001
+From: Ozkan Sezer <sezeroz@gmail.com>
+Date: Tue, 30 Jul 2024 17:00:00 +0300
+Subject: [PATCH] autotools, darwin: restrict -force_cpusubtype_ALL switch to
+ powerpc only
+
+Fixes: https://github.com/xiph/vorbis/issues/107
+Fixes: https://github.com/xiph/vorbis/pull/108
+(See also: https://github.com/mkxp-z/mkxp-z/pull/200)
+---
+ configure.ac | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/configure.ac b/configure.ac
+index 14a267f89..3d62bc9fa 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -201,10 +201,14 @@ else
+ 		DEBUG="-g -Wall -Wextra -D__NO_MATH_INLINES -fsigned-char $sparc_cpu"
+ 		CFLAGS="-O3 -Wall -Wextra -ffast-math -D__NO_MATH_INLINES -fsigned-char $sparc_cpu"
+ 		PROFILE="-pg -g -O3 -D__NO_MATH_INLINES -fsigned-char $sparc_cpu" ;;
+-	*-*-darwin*)
++	powerpc-*-darwin*)
+ 		DEBUG="-DDARWIN -fno-common -force_cpusubtype_ALL -Wall -g -O0 -fsigned-char"
+ 		CFLAGS="-DDARWIN -fno-common -force_cpusubtype_ALL -Wall -g -O3 -ffast-math -fsigned-char"
+ 		PROFILE="-DDARWIN -fno-common -force_cpusubtype_ALL -Wall -g -pg -O3 -ffast-math -fsigned-char";;
++	*-*-darwin*)
++		DEBUG="-DDARWIN -fno-common -Wall -g -O0 -fsigned-char"
++		CFLAGS="-DDARWIN -fno-common -Wall -g -O3 -ffast-math -fsigned-char"
++		PROFILE="-DDARWIN -fno-common -Wall -g -pg -O3 -ffast-math -fsigned-char";;
+ 	*-*-os2*)
+ 		# Use -W instead of -Wextra because gcc on OS/2 is an old version.
+ 		DEBUG="-g -Wall -W -D_REENTRANT -D__NO_MATH_INLINES -fsigned-char"
