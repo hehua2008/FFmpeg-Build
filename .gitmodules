@@ -58,3 +58,6 @@
 [submodule "freetype"]
 	path = freetype
 	url = git@github.com:freetype/freetype.git
+[submodule "ffmpeg-topaz"]
+	path = ffmpeg-topaz
+	url = git@github.com:TopazLabs/FFmpeg.git

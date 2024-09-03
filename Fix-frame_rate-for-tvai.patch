@@ -1,0 +1,153 @@
+From 69bb6222eb5d80150d95b666a0fc98859b3a0542 Mon Sep 17 00:00:00 2001
+From: hehua2008 <hegan2010@gmail.com>
+Date: Tue, 3 Sep 2024 15:23:51 +0800
+Subject: [PATCH] Fix frame_rate for tvai
+
+---
+ libavfilter/tvai_common.c |  6 ++++--
+ libavfilter/tvai_common.h |  2 +-
+ libavfilter/vf_tvai_cpe.c |  2 +-
+ libavfilter/vf_tvai_fi.c  | 16 +++++++++-------
+ libavfilter/vf_tvai_stb.c |  2 +-
+ libavfilter/vf_tvai_up.c  |  2 +-
+ 6 files changed, 17 insertions(+), 13 deletions(-)
+
+diff --git a/libavfilter/tvai_common.c b/libavfilter/tvai_common.c
+index f6cf814edf..a784e8b4d5 100644
+--- a/libavfilter/tvai_common.c
++++ b/libavfilter/tvai_common.c
+@@ -63,6 +63,8 @@ int ff_tvai_prepareProcessorInfo(VideoProcessorInfo* pProcessorInfo, ModelType m
+   ff_tvai_handleLogging();
+   AVFilterContext *pCtx = pOutlink->src;
+   AVFilterLink *pInlink = pCtx->inputs[0];
++  FilterLink *fInlink = ff_filter_link(pInlink);
++  FilterLink *fOutlink = ff_filter_link(pOutlink);
+   pProcessorInfo->basic = *pBasic;
+   if(ff_tvai_checkModel(pProcessorInfo->basic.modelName, modelType, pCtx) || ff_tvai_checkDevice(pProcessorInfo->basic.device.index, pCtx) || ff_tvai_checkScale(pProcessorInfo->basic.modelName, pProcessorInfo->basic.scale, pCtx)) {
+     return 1;
+@@ -73,14 +75,14 @@ int ff_tvai_prepareProcessorInfo(VideoProcessorInfo* pProcessorInfo, ModelType m
+   pProcessorInfo->basic.inputWidth = pInlink->w;
+   pProcessorInfo->basic.inputHeight = pInlink->h;
+   pProcessorInfo->basic.timebase = av_q2d(pInlink->time_base);
+-  pProcessorInfo->basic.framerate = av_q2d(pInlink->frame_rate);
++  pProcessorInfo->basic.framerate = av_q2d(fInlink->frame_rate);
+   pProcessorInfo->outputWidth = pOutlink->w = pInlink->w*pProcessorInfo->basic.scale;
+   pProcessorInfo->outputHeight = pOutlink->h = pInlink->h*pProcessorInfo->basic.scale;
+   if(pParameters != NULL && parameterCount > 0) {
+     memcpy(pProcessorInfo->modelParameters, pParameters, sizeof(float)*parameterCount);
+   }
+   pOutlink->time_base = pInlink->time_base;
+-  pOutlink->frame_rate = pInlink->frame_rate;
++  fOutlink->frame_rate = fInlink->frame_rate;
+   pOutlink->sample_aspect_ratio = pInlink->sample_aspect_ratio;
+   return 0;
+ }
+diff --git a/libavfilter/tvai_common.h b/libavfilter/tvai_common.h
+index 0d44bbbe3b..3054f24753 100644
+--- a/libavfilter/tvai_common.h
++++ b/libavfilter/tvai_common.h
+@@ -7,7 +7,7 @@
+ #include "libavutil/avutil.h"
+ #include "avfilter.h"
+ #include "formats.h"
+-#include "internal.h"
++#include "avfilter_internal.h"
+ #include "video.h"
+ #include "tvai_data.h"
+ #include "tvai.h"
+diff --git a/libavfilter/vf_tvai_cpe.c b/libavfilter/vf_tvai_cpe.c
+index c356587f53..5e64598ae2 100644
+--- a/libavfilter/vf_tvai_cpe.c
++++ b/libavfilter/vf_tvai_cpe.c
+@@ -31,7 +31,7 @@
+ #include "libavutil/avutil.h"
+ #include "avfilter.h"
+ #include "formats.h"
+-#include "internal.h"
++#include "avfilter_internal.h"
+ #include "video.h"
+ #include "tvai.h"
+ #include "tvai_common.h"
+diff --git a/libavfilter/vf_tvai_fi.c b/libavfilter/vf_tvai_fi.c
+index 3ccacd3992..a22ab2b15b 100644
+--- a/libavfilter/vf_tvai_fi.c
++++ b/libavfilter/vf_tvai_fi.c
+@@ -31,7 +31,7 @@
+ #include "libavutil/avutil.h"
+ #include "avfilter.h"
+ #include "formats.h"
+-#include "internal.h"
++#include "avfilter_internal.h"
+ #include "video.h"
+ #include "tvai_common.h"
+ 
+@@ -75,14 +75,16 @@ static int config_props(AVFilterLink *outlink) {
+     AVFilterContext *ctx = outlink->src;
+     TVAIFIContext *tvai = ctx->priv;
+     AVFilterLink *inlink = ctx->inputs[0];
++    FilterLink *fInlink = ff_filter_link(inlink);
++    FilterLink *fOutlink = ff_filter_link(outlink);
+     float threshold = 0.05;
+     float fpsFactor = 0;
+     tvai->basicInfo.scale = 1;
+     if(tvai->frame_rate.num > 0) {
+-        AVRational frFactor = av_div_q(tvai->frame_rate, inlink->frame_rate);
++        AVRational frFactor = av_div_q(tvai->frame_rate, fInlink->frame_rate);
+         fpsFactor = 1/(tvai->slowmo*av_q2d(frFactor));
+     } else {
+-        outlink->frame_rate = inlink->frame_rate;
++        fOutlink->frame_rate = fInlink->frame_rate;
+         fpsFactor = 1/tvai->slowmo;
+     }
+     VideoProcessorInfo info;
+@@ -94,17 +96,17 @@ static int config_props(AVFilterLink *outlink) {
+     tvai->previousFrame = NULL;
+     tvai->timebaseUpdated = tvai->frame_rate.num > 0 && av_q2d(av_inv_q(tvai->frame_rate)) < av_q2d(outlink->time_base);
+     if(tvai->frame_rate.num > 0) {
+-        outlink->frame_rate = tvai->frame_rate;
++        fOutlink->frame_rate = tvai->frame_rate;
+     }
+-    info.basic.framerate = av_q2d(outlink->frame_rate);
++    info.basic.framerate = av_q2d(fOutlink->frame_rate);
+     if(tvai->timebaseUpdated) {
+-        outlink->time_base  = av_inv_q(outlink->frame_rate);
++        outlink->time_base  = av_inv_q(fOutlink->frame_rate);
+     }
+     info.basic.timebase = av_q2d(outlink->time_base);
+ 
+     tvai->pFrameProcessor = tvai_create(&info);
+     av_log(ctx, AV_LOG_DEBUG, "Set time base to %d/%d %lf -> %d/%d %lf\n", inlink->time_base.num, inlink->time_base.den, av_q2d(inlink->time_base), outlink->time_base.num, outlink->time_base.den, av_q2d(outlink->time_base));
+-    av_log(ctx, AV_LOG_DEBUG, "Set frame rate to %lf -> %lf\n", av_q2d(inlink->frame_rate), av_q2d(outlink->frame_rate));
++    av_log(ctx, AV_LOG_DEBUG, "Set frame rate to %lf -> %lf\n", av_q2d(fInlink->frame_rate), av_q2d(fOutlink->frame_rate));
+     av_log(ctx, AV_LOG_DEBUG, "Set fpsFactor to %lf generating %lf frames\n", fpsFactor, 1/fpsFactor);
+     return tvai->pFrameProcessor == NULL ? AVERROR(EINVAL) : 0;
+ }
+diff --git a/libavfilter/vf_tvai_stb.c b/libavfilter/vf_tvai_stb.c
+index c59ec99129..fb45988829 100644
+--- a/libavfilter/vf_tvai_stb.c
++++ b/libavfilter/vf_tvai_stb.c
+@@ -31,7 +31,7 @@
+ #include "libavutil/avutil.h"
+ #include "avfilter.h"
+ #include "formats.h"
+-#include "internal.h"
++#include "avfilter_internal.h"
+ #include "video.h"
+ #include "tvai.h"
+ #include "tvai_common.h"
+diff --git a/libavfilter/vf_tvai_up.c b/libavfilter/vf_tvai_up.c
+index 9f5a7868a0..279ab7d6a4 100644
+--- a/libavfilter/vf_tvai_up.c
++++ b/libavfilter/vf_tvai_up.c
+@@ -31,7 +31,7 @@
+ #include "libavutil/avutil.h"
+ #include "avfilter.h"
+ #include "formats.h"
+-#include "internal.h"
++#include "avfilter_internal.h"
+ #include "video.h"
+ #include "tvai.h"
+ #include "tvai_common.h"
+-- 
+2.39.3 (Apple Git-146)
+
